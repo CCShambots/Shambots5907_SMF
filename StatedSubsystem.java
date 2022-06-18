@@ -13,7 +13,8 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
     private final List<Transition<E>> transitions = new ArrayList<>();
     private final Map<E, List<FlagState<E>>> flagStates;
-    private final Map<E, Command> continualCommands;
+    private final List<E> perInstanceStates = new ArrayList<>();
+    private final Map<E, Command> continuousCommands;
     private E undeterminedState;
     private E entryState;
 
@@ -29,7 +30,19 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
     public StatedSubsystem(Class<E> enumType) {
         flagStates = new EnumMap<>(enumType);
-        continualCommands = new EnumMap<>(enumType);
+        continuousCommands = new EnumMap<>(enumType);
+    }
+
+    /**
+     * Alternative version to define states that can transition between each other
+     * @param state1 One state
+     * @param state2 The other state
+     * @param command1 The command that will run from state1 -> state2
+     * @param command2 The command that will run from state2 -> state1
+     */
+    protected void addCommutativeTransition(E state1, E state2, Command command1, Command command2) {
+        addTransition(state1, state2, command1);
+        addTransition(state2, state1, command2);
     }
 
     /**
@@ -143,14 +156,40 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         }
 
         //The continuous command is invalid if the indicated state is a flag state
+        if(isFlagState(state))
+            outputErrorMessage("CONTINUOUS COMMANDS CANNOT RUN FOR STATES MARKED AS TRANSITION STATES",
+            "COMMAND TRYING TO BE ADDED: " + state.name());
+
+        if(continuousCommands.containsKey(state)){
+            outputErrorMessage("YOU CANNOT DEFINE MULTIPLE CONTINUOUS COMMANDS FOR THE SAME STATE", "State: " + state.name(), "Command: " + command);
+            return;
+        } else if(perInstanceStates.contains(state)) {
+            outputErrorMessage("YOU CANNOT DEIFNE A CONTINUOUS COMMAND FOR AN INSTANCE-BASED STATE", "State: " + state.name());
+            return;
+        }
+        else continuousCommands.put(state, command);
+    }
+
+    /**
+     * Define a state that will start a different continuous command each time it is reached
+     * This state cannot be a flag state, or a state with a continuous command
+     */
+    public void addInstanceBasedState(E state) {
+        if(isFlagState(state))
+        outputErrorMessage("INSTANCE-BASED STATES CANNOT ALREADY BE TRANSITION STATES",
+        "STATE TRYING TO BE ADDED: " + state.name());
+
+        if(!continuousCommands.containsKey(state)) perInstanceStates.add(state);
+        else outputErrorMessage("YOU CANNOT DEFINE AN INSTANCE BASED STATE THAT ALREADY HAS A CONTINUOUS COMMAND", "State: " + state.name()); 
+    }
+
+    private boolean isFlagState(E state) {
         Set<E> statesMarkedAsFlag = getStatesMarkedAsFlag();
         if(statesMarkedAsFlag.contains(state)) {
-            outputErrorMessage("CONTINUOUS COMMANDS CANNOT RUN FOR STATES MARKED AS TRANSITION STATES",
-                    "COMMAND TRYING TO BE ADDED: " + state.name());
-        }
 
-        if(!continualCommands.containsKey(state)) continualCommands.put(state, command);
-        else outputErrorMessage("YOU CANNOT DEFINE MULTIPLE CONTINUOUS COMMANDS FOR THE SAME STATE", "State: " + state.name(), "Command: " + command);
+            return true;
+        }
+        return statesMarkedAsFlag.contains(state);
     }
 
     /**
@@ -169,7 +208,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * @param proposedTransition The transition that should be compared against all the other transitions
      * @return whether the proposed transition is valid or not
      */
-    private boolean checkIfValidTransition(Transition proposedTransition) {
+    private boolean checkIfValidTransition(Transition<E> proposedTransition) {
         //The transition is invalid if it leads from or to the undetermined state
         if(this.undeterminedState == proposedTransition.getStartState() || this.undeterminedState == proposedTransition.getEndState()) {
             outputErrorMessage("TRANSITIONS CANNOT GO TO OR FROM THE UNDETERMINED STATE", "Transition information: " + proposedTransition);
@@ -190,6 +229,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         if(statesMarkedAsFlag.contains(proposedTransition.getStartState()) || statesMarkedAsFlag.contains(proposedTransition.getEndState()) || statesMarkedAsFlag.contains(proposedTransition.getInterruptionState())) {
             outputErrorMessage("TRANSITIONS CANNOT INCLUDE STATES MARKED AS TRANSITION STATES",
                     "TRANSITION TRYING TO BE ADDED: " + proposedTransition);
+            return false;
         }
 
         //Check the other defined transitions to see if there are any conflicts (if they represent the same states, or if they
@@ -220,12 +260,19 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
                 currentCommand.schedule();
             }
 
-            //If a transition has finished, do the following
+            //If a transition has finished, check for a continuous command
             if(transitioning && !currentCommand.isScheduled()) {
                 transitioning = false;
                 currentState = desiredState;
                 flagState = null;
-                currentCommand = continualCommands.get(currentState);
+                currentCommand = continuousCommands.get(currentState);
+
+                //Add a decorator to the command that will remove the instance-based
+                //command once it has finished running
+                if(perInstanceStates.contains(currentState)) {
+                    continuousCommands.remove(currentState);
+                }
+                
                 if(currentCommand != null) {
                     currentCommand.schedule();
                 }
@@ -253,6 +300,8 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      */
     public abstract void update();
 
+
+    //TODO: Actual error handling instead of just prints
     /**
      * Ask for the subsystem to move to a different state
      * If a flag state is provided, the robot will start transitioning to its parent state
@@ -294,6 +343,15 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         } else return false;
 
         return true;
+    }
+
+
+    public boolean requestTransition(E state, Command command) {
+        if(perInstanceStates.contains(state)) {
+            continuousCommands.put(state, command);
+        } else return false;
+
+        return requestTransition(state);
     }
 
     /**
@@ -423,6 +481,15 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     }
 
     /**
+     * A command that actively requests a state transition for an instance-basedState
+     * @param state
+     * @return
+     */
+    public Command goToState(E state, Command command) {
+        return new FunctionalCommand(() -> {requestTransition(state, command);}, () -> {}, (interrupted) -> {if(interrupted) cancelTransition();}, () -> getCurrentState() == state);
+    }
+
+    /**
      * Tell the subsystem whether the subsystem is enabled or not
      * NOTE: Just because a SUBSYSTEM is enabled, that doesn't mean that the ROBOT is enabled
      * I.e. A subsystem for managing LEDs, to which data can be sent even while the robot is disabled
@@ -430,7 +497,10 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     public void setEnabled(boolean enabled) {this.enabled = enabled;}
 
     public void enable() {setEnabled(true);}
-    public void disable() {setEnabled(false);}
+    public void disable() {
+        setEnabled(false);
+        cancelTransition();
+    }
 
     @Override
     public final void initSendable(SendableBuilder builder) {
@@ -444,6 +514,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         builder.addStringProperty("Current Parent State", () -> getParentState() != null ? getParentState().name() : "null", null);
         builder.addStringProperty("Current Flag State", () -> getFlagState()!= null ? getFlagState().name() : "null", null);
         builder.addBooleanProperty("Transitioning", () -> isTransitioning(), null);
+        builder.addBooleanProperty("Enabled", () -> enabled, null);
 
         additionalSendableData(builder);
     }
