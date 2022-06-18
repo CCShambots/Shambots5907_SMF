@@ -2,9 +2,6 @@ package frc.robot.util.Shambots5907_SMF;
 
 import edu.wpi.first.wpilibj2.command.Command;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Transition<E extends Enum<E>> {
     private E startState;
     private E endState;
@@ -25,7 +22,7 @@ public class Transition<E extends Enum<E>> {
         this.command = command;
     }
 
-    public boolean isValidTransition(Transition testTransition) {
+    public boolean isValidTransition(Transition<E> testTransition) {
         if(testTransition.startState == this.startState && testTransition.endState == this.endState) return false;
         if(testTransition.command == this.command) return false;
 

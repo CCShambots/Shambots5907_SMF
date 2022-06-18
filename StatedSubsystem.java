@@ -407,10 +407,6 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         return transitions.stream().map(Transition::getInterruptionState).collect(Collectors.toList());
     }
 
-    private List<Command> getCommands() {
-        return transitions.stream().map(Transition::getCommand).collect(Collectors.toList());
-    }
-
     /**
      * Get a set of all states that have been marked as flag states
      * @return all states marked as flags
