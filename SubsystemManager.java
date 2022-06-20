@@ -8,7 +8,7 @@ import java.util.*;
 
 public class SubsystemManager {
     private static SubsystemManager instance;
-    private List<StatedSubsystem> subsystems = new ArrayList<>();
+    private List<StatedSubsystem<?>> subsystems = new ArrayList<>();
 
     SubsystemManager() {}
 
@@ -19,7 +19,7 @@ public class SubsystemManager {
         return instance;
     }
 
-    public void registerSubsystem(StatedSubsystem subsystem) {
+    public void registerSubsystem(StatedSubsystem<?> subsystem) {
         SmartDashboard.putData(subsystem.getName(), subsystem);
         subsystems.add(subsystem);
     }
