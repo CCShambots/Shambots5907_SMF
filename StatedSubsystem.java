@@ -27,7 +27,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     private Command currentCommand = null;
     private boolean needToScheduleTransitionCommand = false;
     private boolean enabled = false;
-
+    
     public StatedSubsystem(Class<E> enumType) {
         flagStates = new EnumMap<>(enumType);
         continuousCommands = new EnumMap<>(enumType);

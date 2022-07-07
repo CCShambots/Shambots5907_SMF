@@ -25,6 +25,16 @@ public class SubsystemManager {
     }
 
     /**
+     * Register a number of subsystems at once
+     * @param subsystems array of stated subsystems 
+     */
+    public void registerSubsystems(StatedSubsystem<?> ...subsystems) {
+        for(StatedSubsystem<?> s : subsystems) {
+            registerSubsystem(s);
+        }
+    }
+
+    /**
      * Compose a parallel command group  that will determine the state of every subsystem that has not yet determined itself
      * @return the command group that will determined every subsystem
      */
