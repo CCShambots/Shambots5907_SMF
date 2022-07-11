@@ -1,5 +1,6 @@
 package frc.robot.util.Shambots5907_SMF;
 
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -516,4 +517,10 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     }
 
     public abstract void additionalSendableData(SendableBuilder builder);
+
+    /**
+     * Override this method to add additional sendables to a subsystem
+     * @return
+     */
+    public Map<String, Sendable> additionalSendables() {return null;}
 }
