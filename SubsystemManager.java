@@ -20,7 +20,21 @@ public class SubsystemManager {
         return instance;
     }
 
+    /**
+     * Add a subsystem to be tracked by the SubsystemManager instance. It will automatically enable and disable it.
+     * @param subsystem subsystem to add to the manager
+     */
     public void registerSubsystem(StatedSubsystem<?> subsystem) {
+        sendSubsystemToNT(subsystem);
+
+        subsystems.add(subsystem);
+    }
+
+    /**
+     * Send a subsystem through networktables under SmartDashboard
+     * @param subsystem the subsystem to be sent to network tables
+     */
+    public void sendSubsystemToNT(StatedSubsystem<?> subsystem) {
         //Send the subsystem itself to network tables
         SmartDashboard.putData(subsystem.getName(), subsystem);
 
@@ -28,9 +42,8 @@ public class SubsystemManager {
         for(Map.Entry<String, Sendable> e : subsystem.additionalSendables().entrySet()) {
             SmartDashboard.putData(subsystem.getName() + "/" + e.getKey(), e.getValue());
         }
-
-        subsystems.add(subsystem);
     }
+
 
     /**
      * Register a number of subsystems at once
@@ -57,12 +70,18 @@ public class SubsystemManager {
         return new ParallelCommandGroup(commands.toArray(new Command[commands.size()]));
     }
 
+    /**
+     * Tell all subsystems that they should be enabled
+     */
     public void enableAllSubsystems() {
         for(StatedSubsystem s : subsystems) {
             s.enable();
         }
     }
 
+    /**
+     * Tell all subsystems that they should be disabled
+     */
     public void disableAllSubsystems() {
         for(StatedSubsystem s : subsystems) {
             s.disable();
@@ -71,6 +90,7 @@ public class SubsystemManager {
 
     /**
      * Enable all subsystems and return the command to determine all subsystems
+     * @return the command that should be run
      */
     public Command prepSubsystems() {
         enableAllSubsystems();

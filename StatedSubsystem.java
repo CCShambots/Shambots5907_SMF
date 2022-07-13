@@ -39,8 +39,8 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * Alternative version to define states that can transition between each other
      * @param state1 One state
      * @param state2 The other state
-     * @param command1 The command that will run from state1 -> state2
-     * @param command2 The command that will run from state2 -> state1
+     * @param command1 The command that will run from state1 to state2
+     * @param command2 The command that will run from state2 to state1
      */
     protected void addCommutativeTransition(E state1, E state2, Command command1, Command command2) {
         addTransition(state1, state2, command1);
@@ -102,6 +102,9 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * Add a new flag state to better indicate the subsystem's state
      * If a subsystem fulfills two flag states at once, the one it displays will be unreliable
      * NOTE: If you add two of the same flag state, unexpected behavior will occur
+     * @param parentState the parent state in which the flag state should trigger
+     * @param flagState the flag state which can potentially be active
+     * @param condition under what conditions the flag state should be active
      */
     protected void addFlagState(E parentState, E flagState, BooleanSupplier condition) {
 
@@ -147,8 +150,10 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * This command should run indefinitely (i.e. isFinished() should never return true).
      * The command will be canceled when a transition begins.
      * Only the first command registered for a certain state will be
+     * @param state the state that should have a continuous command
+     * @param command the command that should run once the subsystem reaches that state
      */
-    public void setContinuousCommand(E state, Command command) {
+    protected void setContinuousCommand(E state, Command command) {
         if(!isValidCommand(command)) {
             outputErrorMessage("YOU TRIED TO DEFINE AN INVALID CONTINUOUS COMMAND",
                     "Commands may have no requirements or must require only this subsystem",
@@ -175,8 +180,9 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     /**
      * Define a state that will start a different continuous command each time it is reached
      * This state cannot be a flag state, or a state with a continuous command
+     * @param state the state that should become instance-based
      */
-    public void addInstanceBasedState(E state) {
+    protected void addInstanceBasedState(E state) {
         if(isFlagState(state))
         outputErrorMessage("INSTANCE-BASED STATES CANNOT ALREADY BE TRANSITION STATES",
         "STATE TRYING TO BE ADDED: " + state.name());
@@ -249,6 +255,9 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         return true;
     }
 
+    /**
+     * Method for controlling the state of the subsystem. DO NOT OVERRIDE this as you would in a normal subsystem
+     */
     @Override
     public final void periodic() {
 
@@ -299,6 +308,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
     /**
      * Method that acts as a replacement for periodic()
+     * DO NOT Override periodic() in your StatedSubsystems
      */
     public abstract void update();
 
@@ -308,6 +318,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * Ask for the subsystem to move to a different state
      * If a flag state is provided, the robot will start transitioning to its parent state
      * @param state The state to which the subsystem should go
+     * @return whether a transition was successfully found
      */
     public boolean requestTransition(E state) {
 
@@ -347,7 +358,12 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         return true;
     }
 
-
+    /**
+     * Request that a subsystem move to a target state (for instance-based commands)
+     * @param state the desired state the subsystem should go to
+     * @param command the command that should be run for this instance
+     * @return whether a transition was successfully found
+     */
     public boolean requestTransition(E state, Command command) {
         if(perInstanceStates.contains(state)) {
             continuousCommands.put(state, command);
@@ -379,6 +395,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
     /**
      * Cancel any transition currently running
+     * @return whether there was a transition to cancel
      */
     public final boolean cancelTransition() {
         if(transitioning && currentCommand != null) {
@@ -423,6 +440,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         return states;
     }
 
+
     private Set<E> getStatesMarkedAsParent() {
         return flagStates.keySet();
     }
@@ -434,26 +452,46 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     public final boolean isTransitioning() {return transitioning;}
 
     /**
+     * Find the current state the subsystem is in
      * @return Either the current state, or the current flag state (if there is a flag state)
      */
     public final E getCurrentState() {return flagState != null ? flagState : currentState;}
 
     /**
+     * Find the current state the subsystem is trying to reach
      * @return the state the robot is trying to enter
      */
     public E getDesiredState() {return desiredState;}
 
+    /**
+     * Check if a subsystem is still in its Undetermined state
+     * @return Whether the subsystem has determined itself
+     */
     public boolean isUndetermined() {return currentState == undeterminedState;}
 
+    /**
+     * Get the Entry State of the subsystem (the state the subsystem will enter immediately after determining itself
+     * @return the subsystem's entry state
+     */
     public E getEntryState() { return entryState;}
 
     /**
+     * Determine whether a subsystem is in a specific state...
      * @param state the state to check
      * @return Whether the subsystem is either in the given state or child flag state
      */
     public final boolean isInState(E state) {return currentState == state || flagState == state;}
 
+    /**
+     * Get the current parent state the subsystem is in
+     * @return the parent state
+     */
     public final E getParentState() {return currentState;}
+
+    /**
+     * Get the flag state the subsystem is in (if any)
+     * @return the flag state; Note: This value can be null
+     */
     public final E getFlagState() {return flagState;}
 
     /**
@@ -463,6 +501,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
     /**
      * A command that waits indefinitely for a state to arrive and cancels whatever transition is ongoing if interrupted
+     * @param state the state to wait for
      * @return Command from the factory
      */
     public Command waitForState(E state) {
@@ -479,8 +518,9 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     }
 
     /**
-     * A command that actively requests a state transition for an instance-basedState
+     * A command that actively requests a state transition for an instance-based State
      * @param state target state
+     * @param command the continuous command that should be run once the transition is complete
      * @return command to be run
      */
     public Command goToStateCommand(E state, Command command) {
@@ -532,10 +572,18 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * Tell the subsystem whether the subsystem is enabled or not
      * NOTE: Just because a SUBSYSTEM is enabled, that doesn't mean that the ROBOT is enabled
      * I.e. A subsystem for managing LEDs, to which data can be sent even while the robot is disabled
+     * @param enabled whether the subsystem should be enabled or not
      */
     public void setEnabled(boolean enabled) {this.enabled = enabled;}
 
+    /**
+     * Enables the subsystem
+     */
     public void enable() {setEnabled(true);}
+
+    /**
+     * Disables the subsystem
+     */
     public void disable() {
         setEnabled(false);
         cancelTransition();
@@ -562,7 +610,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
     /**
      * Override this method to add additional sendables to a subsystem
-     * @return
+     * @return Map of Keys and values that will be sent when a Subsystem is registered in the Subsystem Manager
      */
     public Map<String, Sendable> additionalSendables() {return null;}
 }
