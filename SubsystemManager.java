@@ -51,7 +51,7 @@ public class SubsystemManager {
 
         for(StatedSubsystem s : subsystems) {
             if(s.isUndetermined()) {  
-                commands.add(s.goToState(s.getEntryState()));
+                commands.add(s.goToStateCommand(s.getEntryState()));
             }
         }
         return new ParallelCommandGroup(commands.toArray(new Command[commands.size()]));

@@ -5,6 +5,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
@@ -470,21 +471,62 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
     /**
      * A command that actively requests a state transition
-     * @param state
-     * @return
+     * @param state target state
+     * @return command to be run
      */
-    public Command goToState(E state) {
+    public Command goToStateCommand(E state) {
         return new FunctionalCommand(() -> {requestTransition(state);}, () -> {}, (interrupted) -> {if(interrupted) cancelTransition();}, () -> getCurrentState() == state);
     }
 
     /**
      * A command that actively requests a state transition for an instance-basedState
-     * @param state
-     * @return
+     * @param state target state
+     * @return command to be run
      */
-    public Command goToState(E state, Command command) {
+    public Command goToStateCommand(E state, Command command) {
         return new FunctionalCommand(() -> {requestTransition(state, command);}, () -> {}, (interrupted) -> {if(interrupted) cancelTransition();}, () -> getCurrentState() == state);
     }
+
+    /**
+     * Variation of goToStateCommand() for having a delay
+     * @param state target state
+     * @param seconds delay
+     * @return command to be run
+     */
+    public Command goToStateCommandDelayed(E state, double seconds) {
+        return new WaitCommand(seconds).andThen(goToStateCommand(state));
+    }
+
+    /**
+     * Variation of goToStateCommandDelayed() with a default delay of 20ms
+     * @param state target state
+     * @return command to be run
+     */
+    public Command goToStateCommandDelayed(E state) {
+        return goToStateCommandDelayed(state, 0.02);
+    }
+
+    /**
+     * Variation of goToStateCommand() for instance-based commands that includes a delay
+     * @param state target state
+     * @param command instance-based command
+     * @param seconds delay
+     * @return command to be run
+     */
+    public Command goToStateCommandDelayed(E state, Command command, double seconds) {
+        return new WaitCommand(seconds).andThen(goToStateCommand(state, command));
+    }
+
+    /**
+     * Variation of goToStateCommandDelayed() for instance-based commands with a default delay of 20ms
+     * @param state target state
+     * @param command instance-based command
+     * @return command to be run
+     */
+    public Command goToStateCommandDelayed(E state, Command command) {
+        return goToStateCommandDelayed(state, command, 0.02);
+    }
+
 
     /**
      * Tell the subsystem whether the subsystem is enabled or not
