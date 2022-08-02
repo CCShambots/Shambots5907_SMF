@@ -48,6 +48,19 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     }
 
     /**
+     * Create transitions to one end state from many start states.
+     * This can be useful for cancelling subroutines that consist of many states
+     * @param endState the one state that you are going towards
+     * @param command The command to be run for the transition
+     * @param startStates
+     */
+    protected void addMultiTransiitons(E endState, Command command, E... startStates) {
+       for(E state : startStates) {
+           addTransition(state, endState, command);
+       }
+    }
+
+    /**
      * Default version of this method reverts to the start state in case of an interruption
      * @param startState where the subsystem is when beginning the transition
      * @param endState where the subsystem ends the transition
