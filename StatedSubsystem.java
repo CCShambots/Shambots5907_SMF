@@ -587,7 +587,11 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * I.e. A subsystem for managing LEDs, to which data can be sent even while the robot is disabled
      * @param enabled whether the subsystem should be enabled or not
      */
-    public void setEnabled(boolean enabled) {this.enabled = enabled;}
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if(enabled) onEnable();
+        else onDisable();
+    }
 
     /**
      * Enables the subsystem
@@ -620,6 +624,16 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     }
 
     public abstract void additionalSendableData(SendableBuilder builder);
+
+    /**
+     * Override this method to do something when the robot enables
+     */
+    public void onEnable() {}
+
+    /**
+     * Override this method to do something when the robot disables
+     */
+    public void onDisable() {}
 
     /**
      * Override this method to add additional sendables to a subsystem
