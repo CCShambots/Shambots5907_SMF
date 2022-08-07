@@ -53,7 +53,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * This can be useful for cancelling subroutines that consist of many states
      * @param endState the one state that you are going towards
      * @param command The command to be run for the transition
-     * @param startStates
+     * @param startStates the states which can go to the end state
      */
     protected void addMultiTransiitons(E endState, Command command, E... startStates) {
        for(E state : startStates) {
@@ -655,4 +655,10 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * Override this method to do something when the robot disables
      */
     protected void onDisable() {}
+
+    /**
+     * Override this method to add additional sendables to a subsystem
+     * @return Map of Keys and values that will be sent when a Subsystem is registered in the Subsystem Manager
+     */
+    public Map<String, Sendable> additionalSendables() {return null;}
 }
