@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.util.RobotManager;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
@@ -580,6 +581,26 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         return goToStateCommandDelayed(state, command, 0.02);
     }
 
+    /**
+     * Run an instantaneous transition, which is primarily meant for when the subsystem has just been enabled or disabled to instantly return to an idle state.
+     * This happens immediately, regardless of current state of the subsystem
+     * @param targetState the state to transition to
+     * @param toRun runnable that will run before the transition resolves
+     */
+    public void runInstantaneousTransition(E targetState, Runnable toRun) {
+        toRun.run();
+
+        if(currentCommand != null) {
+            currentCommand.cancel();
+            currentCommand = null;
+        }
+
+        currentTransition = null;
+        flagState = null;
+
+        currentState = targetState;
+    }
+
 
     /**
      * Tell the subsystem whether the subsystem is enabled or not
@@ -623,21 +644,15 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         additionalSendableData(builder);
     }
 
-    public abstract void additionalSendableData(SendableBuilder builder);
+    protected abstract void additionalSendableData(SendableBuilder builder);
 
     /**
      * Override this method to do something when the robot enables
      */
-    public void onEnable() {}
+    protected void onEnable() {}
 
     /**
      * Override this method to do something when the robot disables
      */
-    public void onDisable() {}
-
-    /**
-     * Override this method to add additional sendables to a subsystem
-     * @return Map of Keys and values that will be sent when a Subsystem is registered in the Subsystem Manager
-     */
-    public Map<String, Sendable> additionalSendables() {return null;}
+    protected void onDisable() {}
 }
