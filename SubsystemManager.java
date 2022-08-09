@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 public class SubsystemManager {
     private static SubsystemManager instance;

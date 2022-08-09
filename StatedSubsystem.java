@@ -660,5 +660,5 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * Override this method to add additional sendables to a subsystem
      * @return Map of Keys and values that will be sent when a Subsystem is registered in the Subsystem Manager
      */
-    public Map<String, Sendable> additionalSendables() {return null;}
+    public Map<String, Sendable> additionalSendables() {return new HashMap<>();}
 }
