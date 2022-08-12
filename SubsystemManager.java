@@ -26,9 +26,18 @@ public class SubsystemManager {
      * @param subsystem subsystem to add to the manager
      */
     public void registerSubsystem(StatedSubsystem<?> subsystem) {
-        sendSubsystemToNT(subsystem);
 
-        subsystems.add(subsystem);
+        if(!subsystems.contains(subsystem)) {
+            sendSubsystemToNT(subsystem);
+
+            subsystems.add(subsystem);
+        } else {
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            System.out.println("YOU'VE ATTEMPTED TO REGISTER A SUBSYSTEM THAT YOU'VE ALREADY REGISTERED");
+            System.out.println("Subsystem info: " + subsystem.getName());
+            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        }
+
     }
 
     /**

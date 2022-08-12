@@ -497,6 +497,19 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     public final boolean isInState(E state) {return currentState == state || flagState == state;}
 
     /**
+     * Determine whether a subsystem is in any of the passed in states
+     * @param states the state to check
+     * @return Whether the subsystem is either in the given state or child flag state
+     */
+    public final boolean isInState(E... states) {
+        for(E state : states) {
+            if(currentState == state || flagState == state) return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Get the current parent state the subsystem is in
      * @return the parent state
      */

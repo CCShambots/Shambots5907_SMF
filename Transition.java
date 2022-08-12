@@ -1,6 +1,7 @@
 package frc.robot.util.Shambots5907_SMF;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 
 public class Transition<E extends Enum<E>> {
     private E startState;
@@ -16,11 +17,11 @@ public class Transition<E extends Enum<E>> {
     }
 
     public Transition(E startState, E endState, Command command) {
-        this.startState = startState;
-        this.endState = endState;
-        this.interruptionState = startState;
-        this.command = command;
+        this(startState, endState, startState, command);
     }
+
+
+
 
     public boolean isValidTransition(Transition<E> testTransition) {
         if(testTransition.startState == this.startState && testTransition.endState == this.endState) return false;
