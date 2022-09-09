@@ -36,7 +36,7 @@ public class SimpleTransition<E extends Enum<E>> {
     @Override
     public boolean equals(Object obj) {
         if(!(obj instanceof SimpleTransition)) return false;
-        SimpleTransition compare = (SimpleTransition) obj;
+        SimpleTransition<?> compare = (SimpleTransition<?>) obj;
         return compare.startState == this.startState && compare.endState == this.endState && compare.interruptionState == this.interruptionState;
     }
 
