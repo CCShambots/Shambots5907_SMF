@@ -4,6 +4,7 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 
@@ -612,6 +613,8 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
 
         currentState = targetState;
     }
+
+    public void rescheduleContinuousCommand() {transitioning = false; currentCommand = new InstantCommand();}
 
 
     /**

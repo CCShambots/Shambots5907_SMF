@@ -3,9 +3,9 @@ package frc.robot.util.Shambots5907_SMF;
 
 public class SimpleTransition<E extends Enum<E>> {
 
-    private E startState;
-    private E endState;
-    private E interruptionState;
+    public E startState;
+    public E endState;
+    public E interruptionState;
 
     /**
      * Constructor for a transition that can be used for comparing transiitons(i.e basically storing states as a tuple instead of actually including a command)
