@@ -614,7 +614,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
         currentState = targetState;
     }
 
-    public void rescheduleContinuousCommand() {transitioning = false; currentCommand = new InstantCommand();}
+    public void rescheduleContinuousCommand() {transitioning = true; currentCommand = new InstantCommand();}
 
 
     /**
