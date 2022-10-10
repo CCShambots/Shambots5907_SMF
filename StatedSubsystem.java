@@ -49,6 +49,26 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
     }
 
     /**
+     * Creates a new transition with a duplicate command as another one. This is useful for running the same transition command between / among many states
+     * @param startState the start state of the transition you want to create
+     * @param endState the ending state of the transition you want to create
+     * @param copyFromStart the starting state of the transition you want to copy
+     * @param copyFromEnd the ending state of the transition you want to copy
+     * @return whether a transition was successfully found
+     */
+    protected boolean duplicateTransition(E startState, E endState, E copyFromStart, E copyFromEnd) {
+
+        for(Transition<E> t : transitions) {
+            if(t.getStartState() == copyFromStart && t.getEndState() == copyFromEnd) {
+                addTransition(startState, endState, t.getCommand());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Create transitions to one end state from many start states.
      * This can be useful for cancelling subroutines that consist of many states
      * @param endState the one state that you are going towards
