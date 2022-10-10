@@ -75,7 +75,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * @param endingStates all ending states to apply the transitions to
      * @param command the command to run
      */
-    protected void addMultiTransition(E[] startingStates, E[] endingStates, Command command) {
+    protected void addOmniTransition(E[] startingStates, E[] endingStates, Command command) {
         for(E start : startingStates) {
             for (E end : endingStates) {
                 addTransition(start, end, command);
@@ -90,7 +90,7 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
      * @param command The command to be run for the transition
      * @param startStates the states which can go to the end state
      */
-    protected void addMultiTransiitons(E endState, Command command, E... startStates) {
+    protected void addMultiTransitions(E endState, Command command, E... startStates) {
        for(E state : startStates) {
            addTransition(state, endState, command);
        }
