@@ -21,8 +21,6 @@ public class Transition<E extends Enum<E>> {
     }
 
 
-
-
     public boolean isValidTransition(Transition<E> testTransition) {
         if(testTransition.startState == this.startState && testTransition.endState == this.endState) return false;
 //        if(testTransition.command == this.command) return false;
