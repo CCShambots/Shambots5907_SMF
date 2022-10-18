@@ -321,20 +321,22 @@ public abstract class StatedSubsystem<E extends Enum<E>> extends SubsystemBase {
             }
 
             //If a transition has finished, check for a continuous command
-            if(transitioning && !currentCommand.isScheduled()) {
-                transitioning = false;
-                currentState = desiredState;
-                flagState = null;
-                currentCommand = continuousCommands.get(currentState);
-
-                //Add a decorator to the command that will remove the instance-based
-                //command once it has finished running
-                if(perInstanceStates.contains(currentState)) {
-                    continuousCommands.remove(currentState);
-                }
-                
-                if(currentCommand != null) {
-                    currentCommand.schedule();
+            if(currentCommand != null) {
+                if(transitioning && !currentCommand.isScheduled()) {
+                    transitioning = false;
+                    currentState = desiredState;
+                    flagState = null;
+                    currentCommand = continuousCommands.get(currentState);
+    
+                    //Add a decorator to the command that will remove the instance-based
+                    //command once it has finished running
+                    if(perInstanceStates.contains(currentState)) {
+                        continuousCommands.remove(currentState);
+                    }
+                    
+                    if(currentCommand != null) {
+                        currentCommand.schedule();
+                    }
                 }
             }
 
